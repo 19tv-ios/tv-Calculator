@@ -91,13 +91,16 @@ struct NumberView : View {
                 withAnimation(.default){
                     self.color = Color.black
                 }
+                
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                
                 if(self.number == "C"){
                     self.text = ""
                 }else if(self.number == "+/-"){
                     
                 }else if(self.number == "="){
-                    self.text = String(Plus(numberToPlus: self.text))
-                    
+//                    self.text = String(Plus(numberToPlus: OrganizeNum(numberToOrganize: self.text)))
+                    self.text = String( Plus(numberToPlus: Multiply(numberToMultiply: OrganizeNum(numberToOrganize: self.text) ) ) )
                 }else{
                     self.text.append(self.number)
                 }
@@ -106,18 +109,106 @@ struct NumberView : View {
     }
 }
 
-func Plus(numberToPlus:String)->Int{
-    var sum:Int = 0
-    for scalar in numberToPlus.unicodeScalars{
+func OrganizeNum(numberToOrganize : String) -> Array<String>{
+    var numberString : String = ""
+    var finalString : [String] = []
+    
+    for scalar in numberToOrganize.unicodeScalars{
         if(Int(scalar.value)-48 <= 9 && Int(scalar.value)-48 >= 0){
-            sum += Int(scalar.value)-48
+            let ret = String.init(scalar)
+            numberString.append(ret)
+        }else{
+            finalString.append(numberString)
+            let symbol = String.init(scalar)
+            finalString.append(symbol)
+            numberString.removeAll()
+        }
+    }
+    finalString.append(numberString)
+    numberString.removeAll()
+    
+    print(finalString)
+    
+    return finalString
+}
+
+func Plus(numberToPlus:Array<String>)->Int{
+    var sum:Int = 0
+    
+    var model:Int = 1
+    
+    for num in numberToPlus{
+        if(num != "+" && num != "-"){
+            if(model == 1){
+                sum += Int(num) ?? 0
+            }else{
+                sum -= Int(num) ?? 0
+            }
+        }else{
+            if(num == "+"){
+                model = 1
+            }else{
+                model = 0
+            }
         }
     }
     
     return sum
 }
 
-
+func Multiply(numberToMultiply : Array<String>) -> Array<String>{
+    var doneMultiply : Array<String> = []
+    
+    let express = numberToMultiply
+    
+    var unused : String = ""
+    
+    var temp = 0
+    
+    for num in express{
+        if(num == "*"){
+            let cnt1 = express[(express
+                .lastIndex(of: num) ?? 0) + 1]
+            print(cnt1)
+            temp = (Int(doneMultiply.last ?? "0") ?? 1) * Int(cnt1)!
+            
+            doneMultiply.removeLast()
+            
+//            express.remove(at: (express
+//            .lastIndex(of: num) ?? 0)+1)
+            unused.append(express[(express
+                        .lastIndex(of: num) ?? 0)+1])
+            
+            doneMultiply.append(String.init(temp))
+        }else if(num == "/"){
+            let cnt2 = express[(express
+            .lastIndex(of: num) ?? 0) + 1]
+            
+            temp = (Int(doneMultiply.last ?? "0" ) ?? 1) / Int(cnt2)!
+            
+            doneMultiply.removeLast()
+            
+//            express.remove(at: express
+//            .lastIndex(of: num) ?? 0 + 1)
+            unused.append(express[(express
+            .lastIndex(of: num) ?? 0)+1])
+            
+            doneMultiply.append(String.init(temp))
+        }else{
+            if(unused.contains(num)){
+                
+            }else{
+                doneMultiply.append(num)
+            }
+            
+        }
+        
+    }
+    
+    
+    
+    return doneMultiply
+}
 
 
 
